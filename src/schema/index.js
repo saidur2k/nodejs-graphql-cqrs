@@ -2,7 +2,10 @@ const { makeExecutableSchema } = require('graphql-tools');
 const gql = require('graphql-tag');
 const { GraphQLDateTime } = require('graphql-iso-date');
 
-const { data } = require('./data');
+const { createStore } = require('../event-store');
+const eventStore = createStore();
+const addShow = require('../commands/addShow');
+const getShows = require('../queries/getShows');
 
 const typeDefs = gql`
   scalar DateTime
@@ -28,17 +31,16 @@ const typeDefs = gql`
   }
 `;
 
-const fakeData = data;
 module.exports = makeExecutableSchema({
   typeDefs,
   resolvers: {
     DateTime: GraphQLDateTime,
     Query: {
-      allShows: () => fakeData
+      allShows: () => getShows(eventStore)
     },
     Mutation: {
       addShow: (_, data) => {
-        fakeData.push(data);
+        addShow(eventStore, data);
         return true;
       }
     }
